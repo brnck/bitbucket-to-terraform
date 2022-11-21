@@ -13,15 +13,19 @@ import (
 func main() {
 	var cfg config.Config
 
-	initGlobalFlags(&cfg)
+	flag.UintVar(&cfg.LogLevel, "verbose", 7, "Log severity level [1-7]")
+	flag.StringVar(&cfg.BitbucketUsername, "bitbucket-username", "username", "Bitbucket username")
+	flag.StringVar(&cfg.BitbucketPassword, "bitbucket-password", "password", "Bitbucket password")
+	flag.StringVar(&cfg.BitbucketWorkspace, "bitbucket-workspace", cfg.BitbucketUsername, "Which workspace to use")
+
 	initLogger(&cfg)
-	initGenericFlags(&cfg)
 	initResourceFlags(&cfg.Projects, "projects")
 	initResourceFlags(&cfg.Repositories, "repositories")
 	flag.Parse()
 
 	log.Debugln("Initializing Bitbucket client")
 	bbClient := bitbucket.NewBasicAuth(cfg.BitbucketUsername, cfg.BitbucketPassword)
+	bbClient.Pagelen = 50
 	handler := handlers.New(&cfg, bbClient)
 
 	log.Debugln("Finished initializing Bitbucket client")
@@ -42,17 +46,6 @@ func main() {
 	}
 }
 
-func initGlobalFlags(c *config.Config) {
-	flag.BoolVar(
-		&c.DryRun,
-		"dry-run",
-		false,
-		"Simulate data extraction, transformation and loading to specified paths",
-	)
-
-	flag.UintVar(&c.LogLevel, "verbose", 7, "Log severity level [1-7]")
-}
-
 func initLogger(c *config.Config) {
 	if c.LogLevel > 7 {
 		c.LogLevel = 7
@@ -63,12 +56,6 @@ func initLogger(c *config.Config) {
 	log.SetOutput(os.Stdout)
 	level := log.AllLevels[c.LogLevel-1]
 	log.SetLevel(level)
-}
-
-func initGenericFlags(c *config.Config) {
-	flag.StringVar(&c.BitbucketUsername, "bitbucket-username", "username", "Bitbucket username")
-	flag.StringVar(&c.BitbucketPassword, "bitbucket-password", "password", "Bitbucket password")
-	flag.StringVar(&c.BitbucketWorkspace, "bitbucket-workspace", c.BitbucketUsername, "Which workspace to use")
 }
 
 func initResourceFlags(r *config.ResourceFetchConfig, resourceName string) {
@@ -82,7 +69,7 @@ func initResourceFlags(r *config.ResourceFetchConfig, resourceName string) {
 		&r.Path,
 		fmt.Sprintf("load-%s-path", resourceName),
 		"./",
-		fmt.Sprintf("Where to extract %s", resourceName),
+		fmt.Sprintf("Where to extract %s (folder path, not file)", resourceName),
 	)
 	flag.BoolVar(
 		&r.SplitToFiles,

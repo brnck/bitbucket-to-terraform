@@ -13,20 +13,18 @@ Usage of bb2tf:
     	Bitbucket username (default "username")
   -bitbucket-workspace string
     	Which workspace to use (default "username")
-  -dry-run
-    	Simulate data extraction, transformation and loading to specified paths
   -fetch-projects
     	Fetch projects from the Bitbucket (default true)
   -fetch-repositories
     	Fetch repositories from the Bitbucket (default true)
   -load-projects-path string
-    	Where to extract projects (default "./")
+    	Where to extract projects (folder path, not file) (default "./")
   -load-repositories-path string
-    	Where to extract repositories (default "./")
+    	Where to extract repositories (folder path, not file) (default "./")
   -split-projects-to-files
     	Should each resource be separate TF file
   -split-repositories-to-files
     	Should each resource be separate TF file
   -verbose uint
-    	Log severity level [1-7] (default 4)
+    	Log severity level [1-7] (default 7)
 ```

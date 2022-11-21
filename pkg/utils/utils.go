@@ -1,0 +1,39 @@
+package utils
+
+import "strings"
+
+// TransformStringToBeTFCompliant takes string and transforms it
+// in order to be compliant with TF resource name requirements
+func TransformStringToBeTFCompliant(n string) string {
+	changeList := []struct {
+		word        string
+		replaceWith string
+	}{
+		{"0", "zero_"},
+		{"1", "one_"},
+		{"2", "two_"},
+		{"3", "three_"},
+		{"4", "four_"},
+		{"5", "five_"},
+		{"6", "six_"},
+		{"7", "seven_"},
+		{"8", "eight_"},
+		{"9", "nine_"},
+	}
+
+	n = strings.TrimSpace(n)
+	n = strings.ToLower(n)
+	n = strings.ReplaceAll(n, " ", "_")
+	n = strings.ReplaceAll(n, "-", "_")
+	n = strings.ReplaceAll(n, ".", "_")
+
+	for _, v := range changeList {
+		if n[0:1] != v.word {
+			continue
+		}
+
+		n = v.replaceWith + n[1:]
+	}
+
+	return n
+}
