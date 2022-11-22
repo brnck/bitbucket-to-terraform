@@ -5,19 +5,8 @@ import (
 	"os"
 )
 
-// WriteTerraformBlockToFile writes single terraform resource to file
-func WriteTerraformBlockToFile(b *hclwrite.Block, path string) error {
-	f := hclwrite.NewEmptyFile()
-	rootBody := f.Body()
-
-	rootBody.AppendBlock(b)
-	rootBody.AppendNewline()
-
-	return write(f, path)
-}
-
-// WriteTerraformBlocksToFile writes multiple terraform resources to file
-func WriteTerraformBlocksToFile(b map[string]*hclwrite.Block, path string) error {
+// writeTerraformBlocksToFile writes multiple terraform resources to file
+func writeTerraformBlocksToFile(b []*hclwrite.Block, path string) error {
 	f := hclwrite.NewEmptyFile()
 	rootBody := f.Body()
 

@@ -7,8 +7,8 @@ import (
 	"github.com/zclconf/go-cty/cty"
 )
 
-// TransformToProjectBlock creates terraform resource from Bitbucket's project struct
-func TransformToProjectBlock(p *bitbucket.Project, workspace string) *hclwrite.Block {
+// transformToProjectBlock creates terraform resource from Bitbucket's project struct
+func transformToProjectBlock(p *bitbucket.Project, workspace string) *hclwrite.Block {
 	block := hclwrite.NewBlock("resource", []string{
 		"bitbucket_project",
 		utils.TransformStringToBeTFCompliant(p.Name),
@@ -25,11 +25,11 @@ func TransformToProjectBlock(p *bitbucket.Project, workspace string) *hclwrite.B
 	return block
 }
 
-// TransformToRepositoryModuleBlock creates terraform resource from Bitbucket's project struct
-func TransformToRepositoryModuleBlock(r *bitbucket.Repository, workspace string) *hclwrite.Block {
+// transformToRepositoryModuleBlock creates terraform resource from Bitbucket's project struct
+func transformToRepositoryModuleBlock(r *bitbucketRepositoryDecorator, workspace string) *hclwrite.Block {
 	block := hclwrite.NewBlock(
 		"module",
-		[]string{utils.TransformStringToBeTFCompliant(r.Name)},
+		[]string{utils.TransformStringToBeTFCompliant(r.Slug)},
 	)
 
 	body := block.Body()
@@ -40,9 +40,24 @@ func TransformToRepositoryModuleBlock(r *bitbucket.Repository, workspace string)
 	body.SetAttributeValue("workspace_name", cty.StringVal(workspace))
 	body.SetAttributeValue("project_key", cty.StringVal(r.Project.Key))
 
-	//body.SetAttributeValue("pipelines_enabled", cty.BoolVal(true))
-	//body.SetAttributeValue("required_approvals_to_merge", cty.NumberUIntVal(1))
-	//body.SetAttributeValue("require_default_reviewer_approvals_to_merge", cty.NumberUIntVal(1))
+	if r.pipelineConfig == nil {
+		body.SetAttributeValue("pipelines_enabled", cty.BoolVal(false))
+	} else {
+		body.SetAttributeValue("pipelines_enabled", cty.BoolVal(r.pipelineConfig.Enabled))
+	}
+
+	for _, restriction := range r.branchRestriction {
+		if restriction.Kind == "require_approvals_to_merge" {
+			body.SetAttributeValue("required_approvals_to_merge", cty.NumberIntVal(int64(*restriction.Value)))
+		}
+
+		if restriction.Kind == "require_default_reviewer_approvals_to_merge" {
+			body.SetAttributeValue(
+				"require_default_reviewer_approvals_to_merge",
+				cty.NumberIntVal(int64(*restriction.Value)),
+			)
+		}
+	}
 
 	return block
 }
