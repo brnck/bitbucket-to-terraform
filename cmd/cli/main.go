@@ -18,6 +18,19 @@ func main() {
 	flag.StringVar(&cfg.BitbucketPassword, "bitbucket-password", "password", "Bitbucket password")
 	flag.StringVar(&cfg.BitbucketWorkspace, "bitbucket-workspace", cfg.BitbucketUsername, "Which workspace to use")
 
+	flag.BoolVar(
+		&cfg.GenerateImportStatements,
+		"generate-import-statements",
+		true,
+		"Generates shell script `terraform import <...>`",
+	)
+	flag.StringVar(
+		&cfg.ImportStatementsPath,
+		"import-statements-path",
+		"./",
+		"If --generate-import-statements=true, it will be used as path for the file",
+	)
+
 	initResourceFlags(&cfg.Projects, "projects")
 	initResourceFlags(&cfg.Repositories, "repositories")
 	flag.Parse()

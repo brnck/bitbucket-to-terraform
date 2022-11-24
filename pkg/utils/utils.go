@@ -39,3 +39,13 @@ func TransformStringToBeTFCompliant(n string) string {
 
 	return n
 }
+
+func StringExistsInList(list []string, item string) bool {
+	for _, listItem := range list {
+		if item == listItem {
+			return true
+		}
+	}
+
+	return false
+}

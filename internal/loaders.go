@@ -15,16 +15,28 @@ func writeTerraformBlocksToFile(b []*hclwrite.Block, path string) error {
 		rootBody.AppendNewline()
 	}
 
-	return write(f, path)
+	return write(path, f.Bytes())
 }
 
-func write(f *hclwrite.File, path string) error {
-	tfFile, err := os.Create(path)
+func writeTerraformImportStatementsToFile(s []string, path string) error {
+	body := `#!/bin/bash
+
+set -euxo pipefail
+`
+
+	for _, statement := range s {
+		body = body + statement + "\n"
+	}
+
+	return write(path, []byte(body))
+}
+
+func write(path string, bytes []byte) error {
+	f, err := os.Create(path)
 	if err != nil {
 		return err
 	}
-
-	if _, err = tfFile.Write(f.Bytes()); err != nil {
+	if _, err = f.Write(bytes); err != nil {
 		return err
 	}
 

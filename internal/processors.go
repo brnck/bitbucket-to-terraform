@@ -35,9 +35,28 @@ func (r *Repository) ProcessProjects() error {
 	log.Debugln("Transforming items to Terraform blocks")
 
 	var projects []*hclwrite.Block
+	var importStatements []string
 	for _, v := range p.Items {
-		block := transformToProjectBlock(&v, r.config.BitbucketWorkspace)
+		block := transformToProjectBlock(&v)
 		projects = append(projects, block)
+
+		importStatement := transformToTerraformImportStatement(
+			"bitbucket_project",
+			utils.TransformStringToBeTFCompliant(v.Name),
+			fmt.Sprintf("%s/%s", r.config.BitbucketWorkspace, v.Key),
+		)
+		importStatements = append(importStatements, importStatement)
+	}
+
+	if r.config.GenerateImportStatements {
+		log.Infoln("Generate import statements flag is set to true. Will generate shell script")
+		if err := writeTerraformImportStatementsToFile(
+			importStatements,
+			fmt.Sprintf("%s/%s.sh", r.config.ImportStatementsPath, "projects"),
+		); err != nil {
+			log.WithError(err)
+			return err
+		}
 	}
 
 	return writeTerraformBlocksToFile(projects, fmt.Sprintf("%s/%s.tf", r.config.Projects.Path, "projects"))
@@ -67,15 +86,31 @@ func (r *Repository) ProcessRepositories() error {
 
 	log.Debugln("Transforming repositories to Terraform blocks")
 	projects := make(map[string][]*hclwrite.Block)
+	var importStatements []string
 	for brd := range ch {
-		block := transformToRepositoryModuleBlock(&brd, r.config.BitbucketWorkspace)
+		block := transformToRepositoryModuleBlock(&brd)
 		projects[brd.Project.Name] = append(projects[brd.Project.Name], block)
+
+		importStatements = append(
+			importStatements,
+			transformToTerraformModuleImportStatements(&brd, r.config.BitbucketWorkspace)...,
+		)
 	}
 
 	log.Infoln("Writing repositories to files")
+	if r.config.GenerateImportStatements {
+		log.Infoln("Generate import statements flag is set to true. Will generate shell script")
+		if err := writeTerraformImportStatementsToFile(
+			importStatements,
+			fmt.Sprintf("%s/%s.sh", r.config.ImportStatementsPath, "repository_module"),
+		); err != nil {
+			log.WithError(err)
+			return err
+		}
+	}
 	for name, blocks := range projects {
 		if err := writeTerraformBlocksToFile(blocks, fmt.Sprintf(
-			"%s/%s.tf",
+			"%s/project-%s-repositories.tf",
 			r.config.Repositories.Path,
 			utils.TransformStringToBeTFCompliant(name),
 		)); err != nil {
