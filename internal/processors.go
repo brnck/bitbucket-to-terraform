@@ -86,13 +86,13 @@ func (r *Repository) ProcessRepositories() error {
 
 	log.Debugln("Transforming repositories to Terraform blocks")
 	projects := make(map[string][]*hclwrite.Block)
-	var importStatements []string
+	importStatements := make(map[string][]string)
 	for brd := range ch {
 		block := transformToRepositoryModuleBlock(&brd)
 		projects[brd.Project.Name] = append(projects[brd.Project.Name], block)
 
-		importStatements = append(
-			importStatements,
+		importStatements[brd.Project.Name] = append(
+			importStatements[brd.Project.Name],
 			transformToTerraformModuleImportStatements(&brd, r.config.BitbucketWorkspace)...,
 		)
 	}
@@ -100,14 +100,17 @@ func (r *Repository) ProcessRepositories() error {
 	log.Infoln("Writing repositories to files")
 	if r.config.GenerateImportStatements {
 		log.Infoln("Generate import statements flag is set to true. Will generate shell script")
-		if err := writeTerraformImportStatementsToFile(
-			importStatements,
-			fmt.Sprintf("%s/%s.sh", r.config.ImportStatementsPath, "repository_module"),
-		); err != nil {
-			log.WithError(err)
-			return err
+		for index, statements := range importStatements {
+			if err := writeTerraformImportStatementsToFile(
+				statements,
+				fmt.Sprintf("%s/%s-repositories.sh", r.config.ImportStatementsPath, index),
+			); err != nil {
+				log.WithError(err)
+				return err
+			}
 		}
 	}
+
 	for name, blocks := range projects {
 		if err := writeTerraformBlocksToFile(blocks, fmt.Sprintf(
 			"%s/project-%s-repositories.tf",
