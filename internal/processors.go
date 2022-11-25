@@ -89,10 +89,11 @@ func (r *Repository) ProcessRepositories() error {
 	importStatements := make(map[string][]string)
 	for brd := range ch {
 		block := transformToRepositoryModuleBlock(&brd)
-		projects[brd.Project.Name] = append(projects[brd.Project.Name], block)
+		name := utils.TransformStringToBeTFCompliant(brd.Project.Name)
+		projects[name] = append(projects[name], block)
 
-		importStatements[brd.Project.Name] = append(
-			importStatements[brd.Project.Name],
+		importStatements[name] = append(
+			importStatements[name],
 			transformToTerraformModuleImportStatements(&brd, r.config.BitbucketWorkspace)...,
 		)
 	}
@@ -103,7 +104,7 @@ func (r *Repository) ProcessRepositories() error {
 		for index, statements := range importStatements {
 			if err := writeTerraformImportStatementsToFile(
 				statements,
-				fmt.Sprintf("%s/%s-repositories.sh", r.config.ImportStatementsPath, index),
+				fmt.Sprintf("%s/project-%s-repositories.sh", r.config.ImportStatementsPath, index),
 			); err != nil {
 				log.WithError(err)
 				return err
@@ -115,7 +116,7 @@ func (r *Repository) ProcessRepositories() error {
 		if err := writeTerraformBlocksToFile(blocks, fmt.Sprintf(
 			"%s/project-%s-repositories.tf",
 			r.config.Repositories.Path,
-			utils.TransformStringToBeTFCompliant(name),
+			name,
 		)); err != nil {
 			return err
 		}

@@ -19,7 +19,6 @@ var restrictionsToSkip = []string{
 var restrictionsWithFlowControl = []string{
 	"require_no_changes_requested",
 	"require_tasks_to_be_completed",
-	"require_passing_builds_to_merge",
 	"enforce_merge_checks",
 	"allow_auto_merge_when_builds_pass",
 	"reset_pullrequest_approvals_on_change",
@@ -98,6 +97,10 @@ func transformToRepositoryModuleBlock(r *bitbucketRepositoryDecorator) *hclwrite
 
 		if restriction.Kind == "require_approvals_to_merge" {
 			body.SetAttributeValue("required_approvals_to_merge", cty.NumberIntVal(int64(*restriction.Value)))
+		}
+
+		if restriction.Kind == "require_passing_builds_to_merge" {
+			body.SetAttributeValue("require_passing_builds_to_merge", cty.NumberIntVal(int64(*restriction.Value)))
 		}
 
 		if restriction.Kind == "require_default_reviewer_approvals_to_merge" {
