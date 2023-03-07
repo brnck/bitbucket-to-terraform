@@ -6,7 +6,7 @@ require (
 	github.com/hashicorp/hcl/v2 v2.16.1
 	github.com/ktrysmt/go-bitbucket v0.9.55
 	github.com/sirupsen/logrus v1.9.0
-	github.com/zclconf/go-cty v1.12.1
+	github.com/zclconf/go-cty v1.13.0
 )
 
 require (
