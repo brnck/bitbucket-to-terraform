@@ -3,7 +3,7 @@ module github.com/brnck/bitbucket-to-terraform
 go 1.19
 
 require (
-	github.com/hashicorp/hcl/v2 v2.16.2
+	github.com/hashicorp/hcl/v2 v2.17.0
 	github.com/ktrysmt/go-bitbucket v0.9.56
 	github.com/sirupsen/logrus v1.9.3
 	github.com/zclconf/go-cty v1.13.2
